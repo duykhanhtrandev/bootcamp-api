@@ -1,27 +1,66 @@
+const { StatusCodes } = require("http-status-codes");
+const BootCamp = require("../models/bootcampModel");
+
 const createBootcamp = async (req, res) => {
-  res.status(201).json({ success: true, msg: "Create a new bootcamp" });
+  try {
+    const bootcamp = await BootCamp.create(req.body);
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      data: bootcamp,
+    });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+  }
 };
 
 const getAllBootcamps = async (req, res) => {
-  res.status(200).json({ success: true, msg: "Show all bootcamps" });
+  try {
+    const bootcamps = await BootCamp.find().sort("-createdAt");
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, count: bootcamps.length, data: bootcamps });
+  } catch (error) {
+    res.status(StatusCodes.NOT_FOUND).json({ success: false });
+  }
 };
 
 const getSingleBootcamp = async (req, res) => {
-  res
-    .status(200)
-    .json({ success: true, msg: `Show single bootcamp ${req.params.id}` });
+  try {
+    const bootcamp = await BootCamp.findById(req.params.id);
+    if (!bootcamp) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+    }
+    res.status(StatusCodes.OK).json({ success: true, data: bootcamp });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+  }
 };
 
 const updateBootcamp = async (req, res) => {
-  res
-    .status(200)
-    .json({ success: true, msg: `Update a bootcamp ${req.params.id}` });
+  try {
+    const bootcamp = await BootCamp.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!bootcamp) {
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false });
+    }
+    res.status(StatusCodes.OK).json({ success: true, data: bootcamp });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+  }
 };
 
 const deleteBootcamp = async (req, res) => {
-  res
-    .status(200)
-    .json({ success: true, msg: `Delete a bootcamp ${req.params.id}` });
+  try {
+    const bootcamp = await BootCamp.findByIdAndDelete(req.params.id);
+    if (!bootcamp) {
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false });
+    }
+    res.status(StatusCodes.OK).json({ success: true, data: {} });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+  }
 };
 
 module.exports = {
