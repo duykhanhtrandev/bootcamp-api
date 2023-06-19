@@ -24,7 +24,7 @@ const getAllBootcamps = async (req, res) => {
   }
 };
 
-const getSingleBootcamp = async (req, res) => {
+const getSingleBootcamp = async (req, res, next) => {
   try {
     const bootcamp = await BootCamp.findById(req.params.id);
     if (!bootcamp) {
@@ -32,7 +32,8 @@ const getSingleBootcamp = async (req, res) => {
     }
     res.status(StatusCodes.OK).json({ success: true, data: bootcamp });
   } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+    // res.status(StatusCodes.BAD_REQUEST).json({ success: false });
+    next(error);
   }
 };
 
