@@ -13,7 +13,14 @@ const createBootcamp = asyncHandler(async (req, res, next) => {
 });
 
 const getAllBootcamps = asyncHandler(async (req, res, next) => {
-  const bootcamps = await BootCamp.find().sort("-createdAt");
+  let query;
+  let queryStr = JSON.stringify(req.query);
+  queryStr = queryStr.replace(
+    /\b(gt|gte|lt|lte|in)\b/g,
+    (match) => `$${match}`
+  );
+  query = JSON.parse(queryStr);
+  const bootcamps = await BootCamp.find(query).sort("-createdAt");
   res
     .status(StatusCodes.OK)
     .json({ success: true, count: bootcamps.length, data: bootcamps });
