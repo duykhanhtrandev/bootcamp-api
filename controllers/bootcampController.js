@@ -2,10 +2,10 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const { StatusCodes } = require("http-status-codes");
 const geocoder = require("../utils/geocoder");
-const BootCamp = require("../models/bootcampModel");
+const Bootcamp = require("../models/bootcampModel");
 
 const createBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await BootCamp.create(req.body);
+  const bootcamp = await Bootcamp.create(req.body);
   res.status(StatusCodes.CREATED).json({
     success: true,
     data: bootcamp,
@@ -18,7 +18,7 @@ const getAllBootcamps = asyncHandler(async (req, res, next) => {
   let reqQuery = { ...req.query };
 
   // Fields to exclude
-  const removeFields = ["select", "sort"];
+  const removeFields = ["select", "sort", "page", "limit"];
 
   // Loop over removeFields and delete them from reqQuery
   removeFields.forEach((param) => delete reqQuery[param]);
@@ -33,7 +33,7 @@ const getAllBootcamps = asyncHandler(async (req, res, next) => {
   );
 
   // Finding resource
-  query = BootCamp.find(JSON.parse(queryStr));
+  query = Bootcamp.find(JSON.parse(queryStr));
 
   // Select Fields
   if (req.query.select) {
@@ -49,16 +49,45 @@ const getAllBootcamps = asyncHandler(async (req, res, next) => {
     query = query.sort("-createdAt");
   }
 
-  // Finding resource
+  // Pagination
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  const total = await Bootcamp.countDocuments();
+
+  query = query.skip(startIndex).limit(limit);
+
+  // Executing query
   const bootcamps = await query;
 
-  res
-    .status(StatusCodes.OK)
-    .json({ success: true, count: bootcamps.length, data: bootcamps });
+  // Pagination result
+  const pagination = {};
+
+  if (endIndex < total) {
+    pagination.next = {
+      page: page + 1,
+      limit,
+    };
+  }
+
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit,
+    };
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    count: bootcamps.length,
+    pagination,
+    data: bootcamps,
+  });
 });
 
 const getSingleBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await BootCamp.findById(req.params.id);
+  const bootcamp = await Bootcamp.findById(req.params.id);
   if (!bootcamp) {
     return next(
       new ErrorResponse(
@@ -71,7 +100,7 @@ const getSingleBootcamp = asyncHandler(async (req, res, next) => {
 });
 
 const updateBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await BootCamp.findByIdAndUpdate(req.params.id, req.body, {
+  const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
@@ -87,7 +116,7 @@ const updateBootcamp = asyncHandler(async (req, res, next) => {
 });
 
 const deleteBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await BootCamp.findByIdAndDelete(req.params.id);
+  const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
   if (!bootcamp) {
     return next(
       new ErrorResponse(
@@ -111,7 +140,7 @@ const getBootcampsInRadius = asyncHandler(async (req, res, next) => {
   // Divide dist by radius of Earth
   // Earth Radius = 3,963 mi / 6,378km
   const radius = distance / 3963;
-  const bootcamps = await BootCamp.find({
+  const bootcamps = await Bootcamp.find({
     location: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
   });
 
