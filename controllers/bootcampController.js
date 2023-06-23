@@ -14,13 +14,44 @@ const createBootcamp = asyncHandler(async (req, res, next) => {
 
 const getAllBootcamps = asyncHandler(async (req, res, next) => {
   let query;
-  let queryStr = JSON.stringify(req.query);
+  // Copy req.query
+  let reqQuery = { ...req.query };
+
+  // Fields to exclude
+  const removeFields = ["select", "sort"];
+
+  // Loop over removeFields and delete them from reqQuery
+  removeFields.forEach((param) => delete reqQuery[param]);
+
+  // Create query string
+  let queryStr = JSON.stringify(reqQuery);
+
+  // Create operators ($gt, gte, etc)
   queryStr = queryStr.replace(
     /\b(gt|gte|lt|lte|in)\b/g,
     (match) => `$${match}`
   );
-  query = JSON.parse(queryStr);
-  const bootcamps = await BootCamp.find(query).sort("-createdAt");
+
+  // Finding resource
+  query = BootCamp.find(JSON.parse(queryStr));
+
+  // Select Fields
+  if (req.query.select) {
+    const fields = req.query.select.split(",").join(" ");
+    query = query.select(fields);
+  }
+
+  // Sort
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ");
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort("-createdAt");
+  }
+
+  // Finding resource
+  const bootcamps = await query;
+
   res
     .status(StatusCodes.OK)
     .json({ success: true, count: bootcamps.length, data: bootcamps });
