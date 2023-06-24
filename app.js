@@ -10,6 +10,7 @@ const connectDB = require("./db/connect");
 
 // routers
 const bootcampRouter = require("./routes/bootcampRouter");
+const courseRouter = require("./routes/courseRouter");
 
 // middleware
 app.use(express.json());
@@ -19,6 +20,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 app.use("/api/v1/bootcamps", bootcampRouter);
+app.use("/api/v1/courses", courseRouter);
 app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
