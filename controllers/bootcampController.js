@@ -116,7 +116,7 @@ const updateBootcamp = asyncHandler(async (req, res, next) => {
 });
 
 const deleteBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id);
+  const bootcamp = await Bootcamp.findOne({ _id: req.params.id });
   if (!bootcamp) {
     return next(
       new ErrorResponse(
@@ -125,6 +125,7 @@ const deleteBootcamp = asyncHandler(async (req, res, next) => {
       )
     );
   }
+  await bootcamp.deleteOne();
   res.status(StatusCodes.OK).json({ success: true, data: {} });
 });
 
