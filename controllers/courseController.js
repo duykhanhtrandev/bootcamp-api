@@ -15,7 +15,7 @@ const getCourses = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const courses = await query;
+  const courses = await query.sort("-createdAt");
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -24,6 +24,41 @@ const getCourses = asyncHandler(async (req, res, next) => {
   });
 });
 
+const getSingleCourse = asyncHandler(async (req, res, next) => {
+  const course = await Course.findOne({ _id: req.params.courseId });
+  if (!course) {
+    return next(
+      new ErrorResponse(
+        `Course not found with id of ${req.params.courseId}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+  res.status(StatusCodes.OK).json({ success: true, data: course });
+});
+
+const createCourse = asyncHandler(async (req, res, next) => {
+  const course = await Course.create(req.body);
+  res.status(StatusCodes.CREATED).json({ success: true, data: course });
+});
+
+const deleteCourse = asyncHandler(async (req, res, next) => {
+  const course = await Course.findOne({ _id: req.params.courseId });
+  if (!course) {
+    return next(
+      new ErrorResponse(
+        `Course not found with id of ${req.params.courseId}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+  await course.deleteOne();
+  res.status(StatusCodes.OK).json({ success: true, data: {} });
+});
+
 module.exports = {
   getCourses,
+  getSingleCourse,
+  createCourse,
+  deleteCourse,
 };
