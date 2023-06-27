@@ -33,7 +33,7 @@ const getSingleCourse = asyncHandler(async (req, res, next) => {
   if (!course) {
     return next(
       new ErrorResponse(
-        `No course not found with id of ${req.params.courseId}`,
+        `Course not found with id of ${req.params.courseId}`,
         StatusCodes.NOT_FOUND
       )
     );
@@ -52,7 +52,7 @@ const createCourse = asyncHandler(async (req, res, next) => {
   if (!bootcamp) {
     return next(
       new ErrorResponse(
-        `No bootcamp not found with id of ${req.params.bootcampId}`,
+        `Bootcamp not found with id of ${req.params.bootcampId}`,
         404
       )
     );
@@ -60,6 +60,31 @@ const createCourse = asyncHandler(async (req, res, next) => {
 
   const course = await Course.create(req.body);
   res.status(StatusCodes.CREATED).json({ success: true, data: course });
+});
+
+const updateCourse = asyncHandler(async (req, res, next) => {
+  let course = await Course.findOneAndUpdate(
+    { _id: req.params.courseId },
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!course) {
+    return next(
+      new ErrorResponse(
+        `Course not found with id of: ${req.params.courseId}`,
+        404
+      )
+    );
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: course,
+  });
 });
 
 const deleteCourse = asyncHandler(async (req, res, next) => {
@@ -73,12 +98,16 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
     );
   }
   await course.deleteOne();
-  res.status(StatusCodes.OK).json({ success: true, data: {} });
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: {},
+  });
 });
 
 module.exports = {
   getCourses,
   getSingleCourse,
   createCourse,
+  updateCourse,
   deleteCourse,
 };
