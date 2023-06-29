@@ -8,6 +8,7 @@ const {
   updateBootcamp,
   deleteBootcamp,
   getBootcampsInRadius,
+  bootcampPhotoUpload,
 } = require("../controllers/bootcampController");
 
 // Include other resource routers
@@ -17,6 +18,8 @@ const courseRouter = require("./courseRouter");
 router.use("/:bootcampId/courses", courseRouter);
 
 router.route("/radius/:zipcode/:distance").get(getBootcampsInRadius);
+
+router.route("/:id/photo").put(bootcampPhotoUpload);
 
 router.route("/").get(getAllBootcamps).post(createBootcamp);
 

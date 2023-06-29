@@ -1,3 +1,4 @@
+const path = require("path");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const { StatusCodes } = require("http-status-codes");
@@ -152,6 +153,72 @@ const getBootcampsInRadius = asyncHandler(async (req, res, next) => {
   });
 });
 
+const bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
+  const bootcamp = await Bootcamp.findOne({ _id: req.params.id });
+  if (!bootcamp) {
+    return next(
+      new ErrorResponse(
+        `Bootcamp not found with id of ${req.params.id}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+
+  if (!req.files) {
+    new next(
+      new ErrorResponse(`Please upload a file`, StatusCodes.BAD_REQUEST)
+    );
+  }
+
+  const { file } = req.files;
+
+  // Make sure the image is a photo
+  if (!file.mimetype.startsWith("image")) {
+    new next(
+      new ErrorResponse(`Please upload an image file`, StatusCodes.BAD_REQUEST)
+    );
+  }
+
+  // Check filesize
+  if (file.size > process.env.MAX_FILE_UPLOAD) {
+    new next(
+      new ErrorResponse(
+        `Please upload an image smaller than ${
+          process.env.MAX_FILE_UPLOAD / 1000000
+        }MB`,
+        StatusCodes.BAD_REQUEST
+      )
+    );
+  }
+
+  // Create custom filename
+  file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}`;
+
+  const imagePath = `${process.env.FILE_UPLOAD_PATH}/${file.name}`;
+
+  file.mv(imagePath, async (err) => {
+    if (err) {
+      console.error(err);
+      return next(
+        new ErrorResponse(
+          `Problem with file upload`,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        )
+      );
+    }
+
+    await Bootcamp.findOneAndUpdate(
+      { _id: req.params.id },
+      { photo: file.name }
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: file.name,
+    });
+  });
+});
+
 module.exports = {
   getAllBootcamps,
   getSingleBootcamp,
@@ -159,4 +226,5 @@ module.exports = {
   updateBootcamp,
   deleteBootcamp,
   getBootcampsInRadius,
+  bootcampPhotoUpload,
 };

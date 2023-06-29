@@ -53,7 +53,7 @@ const createCourse = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorResponse(
         `Bootcamp not found with id of ${req.params.bootcampId}`,
-        404
+        StatusCodes.NOT_FOUND
       )
     );
   }
@@ -76,7 +76,7 @@ const updateCourse = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorResponse(
         `Course not found with id of: ${req.params.courseId}`,
-        404
+        StatusCodes.NOT_FOUND
       )
     );
   }

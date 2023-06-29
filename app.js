@@ -3,10 +3,17 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const colors = require("colors");
+const fileUpload = require("express-fileupload");
 const errorHandler = require("./middleware/error");
 
 // connectDB
 const connectDB = require("./db/connect");
+
+// set static folder
+app.use(express.static("./public"));
+
+// file uploading
+app.use(fileUpload());
 
 // routers
 const bootcampRouter = require("./routes/bootcampRouter");
