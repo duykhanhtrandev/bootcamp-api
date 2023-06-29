@@ -4,25 +4,18 @@ const { StatusCodes } = require("http-status-codes");
 const Course = require("../models/courseModel.js");
 const Bootcamp = require("../models/bootcampModel.js");
 
-const getCourses = asyncHandler(async (req, res, next) => {
-  let query;
-
+const getAllCourses = asyncHandler(async (req, res, next) => {
   if (req.params.bootcampId) {
-    query = Course.find({ bootcamp: req.params.bootcampId });
-  } else {
-    query = Course.find().populate({
-      path: "bootcamp",
-      select: "name description",
+    const courses = await Course.find({ bootcamp: req.params.bootcampId });
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      count: courses.length,
+      data: courses,
     });
+  } else {
+    return res.status(StatusCodes.OK).json(res.advancedResults);
   }
-
-  const courses = await query.sort("-createdAt");
-
-  res.status(StatusCodes.OK).json({
-    success: true,
-    count: courses.length,
-    data: courses,
-  });
 });
 
 const getSingleCourse = asyncHandler(async (req, res, next) => {
@@ -105,7 +98,7 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
 });
 
 module.exports = {
-  getCourses,
+  getAllCourses,
   getSingleCourse,
   createCourse,
   updateCourse,
