@@ -13,9 +13,48 @@ const register = asyncHandler(async (req, res, next) => {
     role,
   });
 
-  res.status(StatusCodes.OK).json({ success: true });
+  // Create token
+  const token = user.getSignedJwtToken();
+
+  res.status(StatusCodes.OK).json({ success: true, token });
+});
+
+const login = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return next(
+      new ErrorResponse(
+        "Please provide email and password",
+        StatusCodes.BAD_REQUEST
+      )
+    );
+  }
+
+  // Check fot user
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    return next(
+      new ErrorResponse("Invalid credentials", StatusCodes.UNAUTHORIZED)
+    );
+  }
+
+  // Check if password matches
+  const isPasswordCorrect = await user.comparePassword(password);
+
+  if (!isPasswordCorrect) {
+    return next(
+      new ErrorResponse("Invalid credentials", StatusCodes.UNAUTHORIZED)
+    );
+  }
+
+  // Create token
+  const token = user.getSignedJwtToken();
+
+  res.status(StatusCodes.OK).json({ success: true, token });
 });
 
 module.exports = {
   register,
+  login,
 };
