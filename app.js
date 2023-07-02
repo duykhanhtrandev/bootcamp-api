@@ -4,6 +4,7 @@ const app = express();
 const morgan = require("morgan");
 const colors = require("colors");
 const fileUpload = require("express-fileupload");
+const cookieParser = require("cookie-parser");
 const errorHandler = require("./middleware/error");
 
 // connectDB
@@ -22,6 +23,9 @@ const authRouter = require("./routes/authRouter");
 
 // middleware
 app.use(express.json());
+
+// cookie parser
+app.use(cookieParser());
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
