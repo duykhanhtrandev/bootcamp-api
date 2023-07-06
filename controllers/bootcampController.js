@@ -48,10 +48,8 @@ const getSingleBootcamp = asyncHandler(async (req, res, next) => {
 });
 
 const updateBootcamp = asyncHandler(async (req, res, next) => {
-  const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const bootcamp = await Bootcamp.findOne({ _id: req.params.id });
+
   if (!bootcamp) {
     return next(
       new ErrorResponse(
@@ -60,11 +58,28 @@ const updateBootcamp = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.params.id} is not authorized to update this bootcamp`,
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
+  await bootcamp.updateOne(req.body, {
+    new: true,
+    runValidators: true,
+  });
+
   res.status(StatusCodes.OK).json({ success: true, data: bootcamp });
 });
 
 const deleteBootcamp = asyncHandler(async (req, res, next) => {
   const bootcamp = await Bootcamp.findOne({ _id: req.params.id });
+
   if (!bootcamp) {
     return next(
       new ErrorResponse(
@@ -73,6 +88,17 @@ const deleteBootcamp = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.params.id} is not authorized to delete this bootcamp`,
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
   await bootcamp.deleteOne();
   res.status(StatusCodes.OK).json({ success: true, data: {} });
 });
@@ -107,6 +133,16 @@ const bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
       new ErrorResponse(
         `Bootcamp not found with id of ${req.params.id}`,
         StatusCodes.NOT_FOUND
+      )
+    );
+  }
+
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.params.id} is not authorized to update this bootcamp`,
+        StatusCodes.UNAUTHORIZED
       )
     );
   }
