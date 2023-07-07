@@ -39,6 +39,7 @@ const getSingleCourse = asyncHandler(async (req, res, next) => {
 
 const createCourse = asyncHandler(async (req, res, next) => {
   req.body.bootcamp = req.params.bootcampId;
+  req.body.user = req.user.id;
 
   const bootcamp = await Bootcamp.findOne({ _id: req.params.bootcampId });
 
@@ -51,19 +52,22 @@ const createCourse = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Make sure user is bootcamp owner
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
   const course = await Course.create(req.body);
   res.status(StatusCodes.CREATED).json({ success: true, data: course });
 });
 
 const updateCourse = asyncHandler(async (req, res, next) => {
-  let course = await Course.findOneAndUpdate(
-    { _id: req.params.courseId },
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  const course = await Course.findOne({ _id: req.params.courseId });
 
   if (!course) {
     return next(
@@ -73,6 +77,21 @@ const updateCourse = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  // Make sure user is course owner
+  if (course.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update course ${course._id}`,
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
+  await course.updateOne(req.body, {
+    new: true,
+    runValidators: true,
+  });
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -90,7 +109,19 @@ const deleteCourse = asyncHandler(async (req, res, next) => {
       )
     );
   }
+
+  // Make sure user is course owner
+  if (course.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update course ${course._id}`,
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
   await course.deleteOne();
+
   res.status(StatusCodes.OK).json({
     success: true,
     data: {},
