@@ -70,7 +70,31 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
+const forgotPassword = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(
+      new ErrorResponse(
+        `There is no user with this email ${req.body.email}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+
+  // Get reset token
+  const resetToken = user.getResetPasswordToken();
+
+  await user.save({ validateBeforeSave: false });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: user,
+  });
+});
+
 module.exports = {
   register,
   login,
+  forgotPassword,
 };
