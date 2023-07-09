@@ -76,6 +76,53 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, StatusCodes.OK, res);
 });
 
+const updateDetails = asyncHandler(async (req, res, next) => {
+  const fieldsToUpdate = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  const user = await User.findOneAndUpdate(
+    { _id: req.user.id },
+    fieldsToUpdate,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: user,
+  });
+});
+
+const updatePassword = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({ _id: req.user.id }).select("+password");
+
+  if (!user) {
+    return next(
+      new ErrorResponse(
+        `User not not found with id of ${req.user.id}`,
+        StatusCodes.OK
+      )
+    );
+  }
+
+  // Check current password
+  if (!(await user.comparePassword(req.body.currentPassword))) {
+    return next(
+      new ErrorResponse(`Password is incorrect`, StatusCodes.UNAUTHORIZED)
+    );
+  }
+
+  user.password = req.body.newPassword;
+
+  await user.save();
+
+  sendTokenResponse(user, StatusCodes.OK, res);
+});
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
@@ -156,4 +203,6 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
+  updateDetails,
+  updatePassword,
 };
