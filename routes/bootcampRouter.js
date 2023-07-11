@@ -18,9 +18,11 @@ const advancedResults = require("../middleware/advancedResults");
 
 // Include other resource routers
 const courseRouter = require("./courseRouter");
+const reviewRouter = require("./reviewRouter");
 
 // Re-route into other resource routers
 router.use("/:bootcampId/courses", courseRouter);
+router.use("/:bootcampId/reviews", reviewRouter);
 
 router.route("/radius/:zipcode/:distance").get(getBootcampsInRadius);
 
