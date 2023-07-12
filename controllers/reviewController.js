@@ -58,4 +58,73 @@ const createReview = asyncHandler(async (req, res, next) => {
   });
 });
 
-module.exports = { getAllReviews, getSingleReview, createReview };
+const updateReview = asyncHandler(async (req, res, next) => {
+  const { title, text, rating } = req.body;
+
+  const review = await Review.findOne({ _id: req.params.id });
+
+  if (!review) {
+    return next(
+      new ErrorResponse(
+        `Review not found with id of ${req.params.id}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+
+  if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        "Not Authorized to access this route",
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
+  review.title = title;
+  review.text = text;
+  review.rating = rating;
+
+  await review.save();
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: review,
+  });
+});
+
+const deleteReview = asyncHandler(async (req, res, next) => {
+  const review = await Review.findOne({ _id: req.params.id });
+
+  if (!review) {
+    return next(
+      new ErrorResponse(
+        `Review not found with id of ${req.params.id}`,
+        StatusCodes.NOT_FOUND
+      )
+    );
+  }
+
+  if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        "Not authorized to access this route",
+        StatusCodes.UNAUTHORIZED
+      )
+    );
+  }
+
+  await review.deleteOne();
+
+  res.status(StatusCodes.OK).json({
+    message: "Success! Review Removed",
+  });
+});
+
+module.exports = {
+  getAllReviews,
+  getSingleReview,
+  createReview,
+  updateReview,
+  deleteReview,
+};
