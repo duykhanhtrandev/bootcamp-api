@@ -50,6 +50,18 @@ const login = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, StatusCodes.OK, res);
 });
 
+const logout = asyncHandler(async (req, res, next) => {
+  res.cookie("token", "none", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: {},
+  });
+});
+
 const resetPassword = asyncHandler(async (req, res, next) => {
   // Get hashed token
   const resetPasswordToken = crypto
@@ -201,6 +213,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
 module.exports = {
   register,
   login,
+  logout,
   forgotPassword,
   resetPassword,
   updateDetails,
