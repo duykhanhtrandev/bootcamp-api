@@ -18,7 +18,7 @@ Live demo: https://codecamp-api.onrender.com/
 
 ## Install Dependencies
 
-Set your env variables (.env file)
+Set your env variables ([.env file](./env.env))
 
 ```
 npm install
